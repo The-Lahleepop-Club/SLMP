@@ -1,3 +1,5 @@
+using SLMP.Exceptions;
+
 using System.Net.Sockets;
 
 namespace SLMP {
@@ -10,7 +12,7 @@ namespace SLMP {
         /// This `HEADER` array contains the shared (header) data between
         /// commands that are supported in this library.
         /// </summary>
-        private readonly byte[] HEADER = {
+        private readonly byte[] _header = {
             0x50, 0x00,     // subheader: no serial no.
             0x00,           // request destination network no.
             0xff,           // request destination station no.
@@ -18,7 +20,7 @@ namespace SLMP {
             0x00,           // request destination multidrop station no.
         };
 
-        private SlmpConfig _config;
+        private readonly SlmpConfig _config;
         private TcpClient _client;
         private NetworkStream? _stream;
 
@@ -112,27 +114,21 @@ namespace SLMP {
             // read a single byte to determine
             // if a serial no. is included or not
             int value = _stream!.ReadByte();
-            byte[] hdrBuf;
-            switch (value) {
+
+            byte[] hdrBuf = value switch {
                 // handle the case where we receive EOF
                 // from the network stream
-                case -1:
-                    throw new EndOfStreamException("received EOF from the network stream");
+                -1 => throw new EndOfStreamException("Received EOF from the network stream"),
                 // if value is 0xd0, there's no serial no. included
                 // in the response
-                case 0xd0:
-                    hdrBuf = ReceiveBytes(8);
-                    break;
+                0xd0 => ReceiveBytes(8),
                 // if value is 0xd4, there's a serial no. included
                 // in the response
-                case 0xd4:
-                    hdrBuf = ReceiveBytes(12);
-                    break;
+                0xd4 => ReceiveBytes(12),
                 // in the case where we receive some other data, we mark it
                 // as invalid and throw an `Exception`
-                default:
-                    throw new InvalidDataException($"while reading respoonse header: invalid start byte received: {value}");
-            }
+                _ => throw new InvalidPlcDataException($"While reading respoonse header: invalid start byte received: {value}"),
+            };
 
             // calculate the response data length
             int dataSize = hdrBuf[^1] << 8 | hdrBuf[^2];
@@ -155,9 +151,9 @@ namespace SLMP {
             if (!InternalIsConnected())
                 throw new NotConnectedException();
 
-            List<byte> rawRequest = HEADER.ToList();
+            List<byte> rawRequest = _header.ToList();
 
-            ushort cmd = (ushort)Command.DeviceRead;
+            const ushort cmd = (ushort)Command.DeviceRead;
             ushort sub = DeviceMethods.GetSubcommand(device);
 
             rawRequest.AddRange(new byte[]{
@@ -187,9 +183,9 @@ namespace SLMP {
             if (!InternalIsConnected())
                 throw new NotConnectedException();
 
-            List<byte> rawRequest = HEADER.ToList();
+            List<byte> rawRequest = _header.ToList();
 
-            ushort cmd = (ushort)Command.DeviceWrite;
+            const ushort cmd = (ushort)Command.DeviceWrite;
             ushort sub = DeviceMethods.GetSubcommand(device);
             ushort len = (ushort)(data.Length + 0x000c);
 
@@ -217,9 +213,9 @@ namespace SLMP {
             if (!InternalIsConnected())
                 throw new NotConnectedException();
 
-            List<byte> rawRequest = HEADER.ToList();
-            ushort cmd = (ushort)Command.SelfTest;
-            ushort sub = 0x0000;
+            List<byte> rawRequest = _header.ToList();
+            const ushort cmd = (ushort)Command.SelfTest;
+            const ushort sub = 0x0000;
 
             rawRequest.AddRange(new byte[]{
                 // request data length (in terms of bytes): fixed size (12) for the read command

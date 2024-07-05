@@ -12,7 +12,7 @@
         /// <summary>
         /// The port that SLMP server is configured to run on.
         /// </summary>
-        public int Port { get; set; }
+        public int Port { get; set; } = 1200;
         /// <summary>
         /// Connection timeout.
         /// </summary>

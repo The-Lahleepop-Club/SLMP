@@ -45,7 +45,7 @@ namespace SLMP {
             List<byte> response = ReceiveResponse();
             List<bool> result = new();
 
-            response.ForEach(delegate (byte a) {
+            response.ForEach((byte a) => {
                 result.Add((a & 0x10) != 0);
                 result.Add((a & 0x01) != 0);
             });

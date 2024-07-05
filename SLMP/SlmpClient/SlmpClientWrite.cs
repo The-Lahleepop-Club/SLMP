@@ -141,7 +141,7 @@ namespace SLMP {
             System.Text.Encoding.ASCII.GetBytes(text.ToCharArray())
                 .Chunk(2)
                 .ToList()
-                .ForEach(a => result.Add((ushort)(a[1] << 8 | a[0])));
+                .ForEach(chunk => result.Add((ushort)(chunk[1] << 8 | chunk[0])));
 
             WriteWordDevice(device, addr, result.ToArray());
         }
