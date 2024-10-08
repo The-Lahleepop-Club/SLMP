@@ -6,7 +6,7 @@
     /// <seealso cref="Exception" />
     public class NotConnectedException: Exception {
         public NotConnectedException()
-            : base("Not connected to a server") { }
+            : base("Not connected to PLC") { }
 
         public NotConnectedException(string? message) : base(message) {
         }
