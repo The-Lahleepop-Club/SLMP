@@ -2,7 +2,7 @@ using System.Reflection;
 
 namespace SLMP {
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
-    public class SlmpStringAttribute : Attribute {
+    public class SlmpStringAttribute: Attribute {
         /// <summary>
         /// Length of the string.
         /// </summary>
@@ -10,7 +10,7 @@ namespace SLMP {
         /// <summary>
         /// Number of the device words that the string occupies.
         /// </summary>
-        public int WordCount => Length % 2 == 0 ? Length / 2 + 1 : (Length + 1) / 2;
+        public int WordCount => Length % 2 == 0 ? (Length / 2) + 1 : (Length + 1) / 2;
     }
 
     /// <summary>
@@ -27,31 +27,37 @@ namespace SLMP {
         /// <param name="structType">Type of the structure.</param>
         public static int GetStructSize(Type structType) {
             int size = 0;
-            var fieldTypes = structType.GetFields();
+            FieldInfo[]? fieldTypes = structType.GetFields();
 
-            foreach (var field in fieldTypes)
+            foreach (FieldInfo? field in fieldTypes) {
                 switch (field.FieldType.Name) {
                     case "Int16":
                     case "UInt16":
                     case "Boolean":
+                    case "short":
+                    case "ushort":
                         size++;
                         break;
                     case "Int32":
                     case "UInt32":
+                    case "int":
+                    case "uint":
                         size += 2;
                         break;
                     case "String":
+                    case "string":
                         SlmpStringAttribute? attr = field
                             .GetCustomAttributes<SlmpStringAttribute>()
                             .SingleOrDefault();
                         if (attr == default(SlmpStringAttribute))
-                            throw new ArgumentException("please add a `SlmpStringAttribute` to the string.");
+                            throw new ArgumentException("Please add an 'SlmpStringAttribute' to the string property.");
 
                         size += attr.WordCount;
                         break;
                     default:
-                        throw new ArgumentException($"unsupported type: {field.FieldType.Name}");
+                        throw new ArgumentException($"Unsupported type: {field.FieldType.Name}");
                 }
+            }
 
             return size;
         }
@@ -77,10 +83,12 @@ namespace SLMP {
             foreach (var field in fields) {
                 switch (field.FieldType.Name) {
                     case "Int16":
+                    case "short":
                         field.SetValue(structObject, (Int16)words[index]);
                         index++;
                         break;
                     case "UInt16":
+                    case "ushort":
                         field.SetValue(structObject, (UInt16)words[index]);
                         index++;
                         break;
@@ -89,21 +97,24 @@ namespace SLMP {
                         index++;
                         break;
                     case "Int32":
+                    case "int":
                         field.SetValue(
                             structObject, (Int32)((words[index + 1] << 16) | words[index]));
                         index += 2;
                         break;
                     case "UInt32":
+                    case "uint":
                         field.SetValue(
                             structObject, (UInt32)((words[index + 1] << 16) | words[index]));
                         index += 2;
                         break;
                     case "String":
+                    case "string":
                         SlmpStringAttribute? attr = field
                             .GetCustomAttributes<SlmpStringAttribute>()
                             .SingleOrDefault();
                         if (attr == default(SlmpStringAttribute))
-                            throw new ArgumentException("please add a SlmpStringAttribute to the string.");
+                            throw new ArgumentException("Please add an 'SlmpStringAttribute' to the string property.");
 
                         List<char> buffer = new();
                         for (int i = index; i < index + attr.WordCount; i++) {
@@ -116,7 +127,7 @@ namespace SLMP {
                         index += attr.WordCount;
                         break;
                     default:
-                        throw new ArgumentException($"unsupported type: {field.FieldType.Name}");
+                        throw new ArgumentException($"Unsupported type: {field.FieldType.Name}");
                 }
             }
 

@@ -5,12 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace SLMPUnitTests {
-    public class Utils {
-        public static string SLMP_ADDR = "192.168.3.39";
-        public static int SLMP_PORT = 1200;
+    public static class Utils {
+
+        public static string SlmpAddress { get; set; } = "192.168.3.39";
+        public static int SlmpPort { get; set; } = 1200;
 
         public static SlmpClient CreateSlmpConnection() {
-            SlmpConfig cfg = new(SLMP_ADDR, SLMP_PORT);
+            SlmpConfig cfg = new(SlmpAddress, SlmpPort);
             SlmpClient plc = new(cfg);
             plc.Connect();
 

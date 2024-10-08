@@ -30,7 +30,7 @@ namespace SLMP {
         SM = 0x91,
     }
 
-    public class DeviceMethods {
+    public static class DeviceMethods {
         /// <summary>
         /// Gets the subcommand for a given `(Bit/Word)Device`.
         /// </summary>
